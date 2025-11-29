@@ -157,7 +157,7 @@ export async function deployChain(parentChain: Chain): Promise<ChainConfig | nul
         break;
       case 3:
         // Generate the node configuration file
-        nodeConfigResult = await generateNodeConfiguration(deployRollupHash!, parentChain, parentChainPublicClient);
+        nodeConfigResult = await generateNodeConfiguration(deployRollupHash, parentChain, parentChainPublicClient);
 
         await writeFile('node-config.json', JSON.stringify(nodeConfigResult.nodeConfig, null, 2));
         logger.success(`Node config written to "node-config.json"`);
