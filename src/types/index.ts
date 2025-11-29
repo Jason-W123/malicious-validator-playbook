@@ -15,7 +15,6 @@ export interface RuntimeAccount {
   // batchPoster: PrivateKeyAccount;
   // deployer: PrivateKeyAccount;
   // parentChainPublicClient: PublicClient;
-  // parentChainPublicClient: PublicClient;
 }
 
 // Node types
