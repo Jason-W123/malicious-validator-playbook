@@ -170,7 +170,7 @@ export async function deployChain(parentChain: Chain): Promise<ChainConfig | nul
   logger.newline();
 
   // Build ChainConfig from the SDK chain config
-  const chainConfig = nodeConfigResult!.chainConfig;
+  const chainConfig = nodeConfigResult.chainConfig;
 
   // Display chain info
   logger.raw(`  Chain ID:       ${chainConfig.chainId}`);
