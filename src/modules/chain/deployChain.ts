@@ -138,9 +138,9 @@ export async function deployChain(parentChain: Chain): Promise<ChainConfig | nul
         batchPosterKeys = generatePrivateKey();
 
         // Get the addresses of the validator and the batch poster
-        validator1Address = privateKeyToAccount(sanitizePrivateKey(validatorKeys1!)).address;
-        validator2Address = privateKeyToAccount(sanitizePrivateKey(validatorKeys2!)).address;
-        batchPosterAddress = privateKeyToAccount(sanitizePrivateKey(batchPosterKeys!)).address;
+        validator1Address = privateKeyToAccount(sanitizePrivateKey(validatorKeys1)).address;
+        validator2Address = privateKeyToAccount(sanitizePrivateKey(validatorKeys2)).address;
+        batchPosterAddress = privateKeyToAccount(sanitizePrivateKey(batchPosterKeys)).address;
 
         break;
       case 1:
