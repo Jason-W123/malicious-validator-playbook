@@ -24,7 +24,7 @@ if (typeof process.env.DEPLOYER_PRIVATE_KEY === 'undefined') {
 }
 
 if (typeof process.env.PARENT_CHAIN_RPC === 'undefined' || process.env.PARENT_CHAIN_RPC === '') {
-  throw new Error(`Please provide "DEPLOYER_PRIVATE_KEY" environment variable`);
+  throw new Error(`Please provide the "PARENT_CHAIN_RPC" environment variable`);
 }
 
 const deployer = privateKeyToAccount(sanitizePrivateKey(process.env.DEPLOYER_PRIVATE_KEY!));
