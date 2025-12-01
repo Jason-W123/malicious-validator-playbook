@@ -42,6 +42,7 @@ const deployRollupContracts = async (
   const createRollupConfig = createRollupPrepareDeploymentParamsConfig(parentChainPublicClient, {
     chainId: BigInt(chainId),
     owner: deployer.address,
+    baseStake: parseEther('0.00001'),
     chainConfig: prepareChainConfig({
       chainId,
       arbitrum: {
@@ -157,7 +158,7 @@ export async function deployChain(parentChain: Chain): Promise<ChainConfig | nul
         break;
       case 3:
         // Generate the node configuration file
-        nodeConfigResult = await generateNodeConfiguration(deployRollupHash, parentChain, parentChainPublicClient);
+        nodeConfigResult = await generateNodeConfiguration(deployRollupHash!, parentChain, parentChainPublicClient);
 
         await writeFile('node-config.json', JSON.stringify(nodeConfigResult.nodeConfig, null, 2));
         logger.success(`Node config written to "node-config.json"`);
@@ -170,7 +171,7 @@ export async function deployChain(parentChain: Chain): Promise<ChainConfig | nul
   logger.newline();
 
   // Build ChainConfig from the SDK chain config
-  const chainConfig = nodeConfigResult.chainConfig;
+  const chainConfig = nodeConfigResult!.chainConfig;
 
   // Display chain info
   logger.raw(`  Chain ID:       ${chainConfig.chainId}`);
