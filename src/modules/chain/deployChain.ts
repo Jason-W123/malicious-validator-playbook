@@ -9,6 +9,17 @@ import { writeFile } from 'fs/promises';
 import { GenerateNodeConfigurationResult } from '../../types';
 import { runtimeAccount } from '../..';
 
+enum NodeRole {
+  Validator = 'validator',
+  BatchPoster = 'batchPoster',
+}
+
+interface NodeAccount {
+  role: NodeRole;
+  privateKey: `0x${string}`;
+  address: `0x${string}`;
+}
+
 const BASE_STAKE = parseEther('0.00001');
 const TEST_TOKENS_AMOUNT = parseEther('0.001');
 const TOKEN_NEEDS_FOR_DEPLOY = BASE_STAKE + TEST_TOKENS_AMOUNT * 4n; // gas needs for2 validators + 1 batch poster + 1 deployer
@@ -124,14 +135,7 @@ export async function deployChain(parentChain: Chain): Promise<ChainConfig | nul
   ];
 
   // Initialize the keys parameters
-  let validatorKeys1: `0x${string}`;
-  let validatorKeys2: `0x${string}`;
-  let batchPosterKeys: `0x${string}`;
-
-  // Initialize the addresses parameters
-  let validator1Address: `0x${string}`;
-  let validator2Address: `0x${string}`;
-  let batchPosterAddress: `0x${string}`;
+  let nodeAccounts: NodeAccount[]; // We need 2 validators and 1 batch poster for the rollup contracts, and will initialize them later on the following loop
 
   // Initialize the deploy rollup hash parameter
   let deployRollupHash: `0x${string}`;
@@ -144,25 +148,45 @@ export async function deployChain(parentChain: Chain): Promise<ChainConfig | nul
     switch (i) {
       case 0:
         // Generate the validator keys and the batch poster key
-        validatorKeys1 = generatePrivateKey();
-        validatorKeys2 = generatePrivateKey();
-        batchPosterKeys = generatePrivateKey();
+        // We need 2 validators and 1 batch poster for the rollup contracts
+        const roles: NodeRole[] = [
+          NodeRole.Validator,
+          NodeRole.Validator,
+          NodeRole.BatchPoster,
+        ];
 
-        // Get the addresses of the validator and the batch poster
-        validator1Address = privateKeyToAccount(sanitizePrivateKey(validatorKeys1)).address;
-        validator2Address = privateKeyToAccount(sanitizePrivateKey(validatorKeys2)).address;
-        batchPosterAddress = privateKeyToAccount(sanitizePrivateKey(batchPosterKeys)).address;
+        // Initialize the node accounts (Randomly generate the private keys for the validators and the batch poster)
+        nodeAccounts = roles.map((role) => {
+          const privateKey = generatePrivateKey();
+          const address = privateKeyToAccount(sanitizePrivateKey(privateKey)).address;
+
+          return { role, privateKey, address };
+        });
 
         break;
       case 1:
         // Send test tokens to the validator accounts and the batch poster account
-        await sendTestTokens(deployer, validator1Address!, parentChainPublicClient);
-        await sendTestTokens(deployer, validator2Address!, parentChainPublicClient);
-        await sendTestTokens(deployer, batchPosterAddress!, parentChainPublicClient);
+        for (const account of nodeAccounts!) {
+          await sendTestTokens(deployer, account.address, parentChainPublicClient);
+        }
         break;
       case 2:
         // Deploy the rollup contracts
-        const deployRollupResult = await deployRollupContracts(deployer, [validator1Address!, validator2Address!], batchPosterAddress!, parentChainPublicClient, chainId);
+        const validatorAddresses = nodeAccounts!
+          .filter((account) => account.role === NodeRole.Validator)
+          .map((account) => account.address);
+
+        const batchPosterAddress = nodeAccounts!.find(
+          (account) => account.role === NodeRole.BatchPoster
+        )!.address;
+
+        const deployRollupResult = await deployRollupContracts(
+          deployer,
+          validatorAddresses,
+          batchPosterAddress,
+          parentChainPublicClient,
+          chainId
+        );
         deployRollupHash = deployRollupResult.transaction.hash;
 
         break;
