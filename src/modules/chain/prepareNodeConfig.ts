@@ -1,7 +1,6 @@
 import { Chain, PublicClient } from 'viem';
 import {
   ChainConfig,
-  NodeConfig,
   PrepareNodeConfigParams,
   createRollupPrepareTransaction,
   createRollupPrepareTransactionReceipt,

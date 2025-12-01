@@ -9,6 +9,10 @@ import { writeFile } from 'fs/promises';
 import { GenerateNodeConfigurationResult } from '../../types';
 import { runtimeAccount } from '../..';
 
+const BASE_STAKE = parseEther('0.00001');
+const TEST_TOKENS_AMOUNT = parseEther('0.001');
+const TOKEN_NEEDS_FOR_DEPLOY = BASE_STAKE + TEST_TOKENS_AMOUNT * 4n; // gas needs for2 validators + 1 batch poster + 1 deployer
+
 /**
  * Simulate a delay for mock operations
  */
@@ -16,7 +20,7 @@ const delay = (ms: number): Promise<void> =>
   new Promise(resolve => setTimeout(resolve, ms));
 
 const sendTestTokens = async (sender: PrivateKeyAccount, toAddress: string, parentChainPublicClient: PublicClient): Promise<`0x${string}`> => {
-  const amount = parseEther('0.001');
+  const amount = TEST_TOKENS_AMOUNT;
   const walletClient = createWalletClient({
     account: sender,
     chain: parentChainPublicClient.chain,
@@ -42,7 +46,7 @@ const deployRollupContracts = async (
   const createRollupConfig = createRollupPrepareDeploymentParamsConfig(parentChainPublicClient, {
     chainId: BigInt(chainId),
     owner: deployer.address,
-    baseStake: parseEther('0.00001'),
+    baseStake: BASE_STAKE,
     chainConfig: prepareChainConfig({
       chainId,
       arbitrum: {
@@ -77,6 +81,12 @@ export async function deployChain(parentChain: Chain): Promise<ChainConfig | nul
   const deployer = runtimeAccount.deployer;
 
   const parentChainPublicClient = runtimeAccount.parentChainPublicClient;
+
+  const balance = await parentChainPublicClient.getBalance({ address: deployer.address });
+  if (balance < TOKEN_NEEDS_FOR_DEPLOY) {
+    logger.error('Insufficient balance to deploy chain. Please top up the account.');
+    return null;
+  }
 
   const randomChainId = generateChainId();
 
