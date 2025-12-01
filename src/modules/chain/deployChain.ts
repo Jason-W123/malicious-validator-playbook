@@ -20,6 +20,15 @@ interface NodeAccount {
   address: `0x${string}`;
 }
 
+function getAddressesByRole(
+  accounts: NodeAccount[],
+  role: NodeRole
+): `0x${string}`[] {
+  return accounts
+    .filter((account) => account.role === role)
+    .map((account) => account.address);
+}
+
 const BASE_STAKE = parseEther('0.00001');
 const TEST_TOKENS_AMOUNT = parseEther('0.001');
 const TOKEN_NEEDS_FOR_DEPLOY = BASE_STAKE + TEST_TOKENS_AMOUNT * 4n; // gas needs for2 validators + 1 batch poster + 1 deployer
@@ -172,13 +181,17 @@ export async function deployChain(parentChain: Chain): Promise<ChainConfig | nul
         break;
       case 2:
         // Deploy the rollup contracts
-        const validatorAddresses = nodeAccounts!
-          .filter((account) => account.role === NodeRole.Validator)
-          .map((account) => account.address);
 
-        const batchPosterAddress = nodeAccounts!.find(
-          (account) => account.role === NodeRole.BatchPoster
-        )!.address;
+        // Get the addresses of the validators and the batch poster
+        const validatorAddresses = getAddressesByRole(
+          nodeAccounts!,
+          NodeRole.Validator
+        );
+        // We only have 1 batch poster
+        const [batchPosterAddress] = getAddressesByRole(
+          nodeAccounts!,
+          NodeRole.BatchPoster
+        );
 
         const deployRollupResult = await deployRollupContracts(
           deployer,
